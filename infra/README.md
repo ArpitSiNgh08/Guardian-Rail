@@ -6,9 +6,10 @@ Start the local Midnight proof server:
 docker compose --env-file .env.example up -d
 ```
 
-It listens at `http://localhost:6300`. Configure Lace Midnight Preview to use
-that local proof-server endpoint.
+It listens at `http://localhost:6300`. Configure Lace Midnight **Preprod** to
+use that local proof-server endpoint when working against Preprod.
 
-The official Midnight node and Indexer endpoints/devnet configuration will be
-added after the Compact toolchain is installed. Midnight's current Windows
-guidance recommends using WSL for contract development.
+This is a browser/Lace proof-generation service; it is not the backend's
+Indexer. The backend will receive a separate Indexer URL and deployed contract
+address after the contract is deployed. Use WSL for Compact development on
+Windows.
