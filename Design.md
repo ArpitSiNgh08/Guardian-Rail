@@ -9,14 +9,14 @@
 
 ### Component sourcing order (strict priority)
 
-1. **course.com/UI** — check here first for any component.
+1. **coss.com/UI** — check here first for any component.
 2. **Motion Primitives** (motion-primitives) — check here second, especially for anything animated/interactive.
 3. **Shared/common components** ("CM components") — if the required component isn't in either library above, check whether it already exists as a shared component in this codebase/design system before building anything new.
 4. **Shadcn** — only if the component isn't available from any of the three sources above.
 
 If, after checking all four sources, truly nothing fits: stop and ask before hand-building anything — don't silently fall back to a from-scratch component.
 
-> **Note for whoever fills this in next:** I couldn't independently verify "course.com/UI" as I don't have reliable information on this exact site/library — please double-check the URL is correct before the team relies on it, and update this doc if the actual address is different.
+> **Setup:** Initialize the Coss UI registry with `npx shadcn@latest init @coss/style`, then add components through the Coss registry. See https://coss.com/ui/docs/get-started.
 
 ### Using each library's MCP server
 
@@ -26,7 +26,7 @@ Where a component library above exposes an MCP server, coding agents should conn
 
 **instead of** browsing the site manually or re-implementing the component from its docs/source by hand. This is faster and keeps every instance of a component in sync with the library's actual source.
 
-Check at the start of each session whether an MCP server is configured/available for course.com/UI and for Motion Primitives. If one is connected, always query it first for a matching component before doing anything else in the sourcing order above.
+Check at the start of each session whether an MCP server is configured/available for coss.com/UI and for Motion Primitives. If one is connected, always query it first for a matching component before doing anything else in the sourcing order above.
 
 ---
 
@@ -83,6 +83,6 @@ module.exports = {
 Before writing any UI code in a session:
 1. Re-read this file.
 2. Identify every component the task needs.
-3. For each one, check course.com/UI → Motion Primitives → shared/common components → Shadcn, in that order, using the library's MCP server where available.
+3. For each one, check coss.com/UI → Motion Primitives → shared/common components → Shadcn, in that order, using the library's MCP server where available.
 4. Only write custom code for layout/composition that glues sourced components together — never for the components themselves.
 5. Apply colors and fonts exclusively from the token set in Section 2.

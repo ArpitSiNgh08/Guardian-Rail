@@ -60,7 +60,7 @@ We are **not** building a real KYC/issuer network this weekend — that's out of
 - Write the mock issuer signing script (Node/TS, outside the contract)
 
 **Phase 2 — Frontend + wallet integration (hours 8–24, parallel with Phase 1)**
-- Scaffold React + Vite app
+- Scaffold a Next.js App Router app
 - Wire up DApp Connector API to detect/connect Lace or 1AM wallet
 - Build the "enter DOB → generate proof → submit" flow against the *local* proof server first, then the testnet
 - Handle the loading states around proof generation (this can take a few seconds — plan the UI around it)
@@ -110,7 +110,7 @@ We are **not** building a real KYC/issuer network this weekend — that's out of
 (Confirm exact package names/versions against `docs.midnight.network/sdks` at hack-start — Midnight ships new majors mid-quarter, e.g. `midnight-js 3.0.0`, `wallet-sdk 1.0.0` were current as of Feb 2026.)
 
 **Frontend app**
-- React + Vite + TypeScript (Midnight's own tutorials are written against this combo, so the most help/examples exist here)
+- Next.js App Router + React + TypeScript. The proof UI remains a client component so DOB and wallet operations stay in the browser.
 - Tailwind CSS for fast styling (skip building a design system this weekend)
 
 **Backend / middleware**

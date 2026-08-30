@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --font-heading: "Asta Sans", sans-serif;
+  --font-body: "Asta Sans", sans-serif;
+  --font-sans: "Asta Sans", sans-serif;
+  --font-mono: "Asta Sans", sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 400;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 700;
+  --text-xs: 0.75rem;
+  --text-sm: 0.75rem;
+  --text-base: 1rem;
+  --text-lg: 1.333rem;
+  --text-xl: 1.333rem;
+  --text-2xl: 1.777rem;
+  --text-3xl: 2.369rem;
+  --text-4xl: 3.158rem;
+  --text-5xl: 4.210rem;
+  --color-background: rgb(252, 249, 248);
+  --color-foreground: rgb(26, 15, 13);
+  --color-card: rgb(252, 249, 248);
+  --color-card-foreground: rgb(26, 15, 13);
+  --color-popover: rgb(252, 249, 248);
+  --color-popover-foreground: rgb(26, 15, 13);
+  --color-primary: rgb(192, 101, 86);
+  --color-primary-foreground: rgb(252, 249, 248);
+  --color-secondary: rgb(222, 163, 154);
+  --color-secondary-foreground: rgb(26, 15, 13);
+  --color-muted: rgb(222, 163, 154);
+  --color-muted-foreground: rgb(26, 15, 13);
+  --color-accent: rgb(212, 115, 99);
+  --color-accent-foreground: rgb(252, 249, 248);
+  --color-destructive: rgb(212, 115, 99);
+  --color-destructive-foreground: rgb(26, 15, 13);
+  --color-info: rgb(192, 101, 86);
+  --color-info-foreground: rgb(26, 15, 13);
+  --color-success: rgb(192, 101, 86);
+  --color-success-foreground: rgb(26, 15, 13);
+  --color-warning: rgb(212, 115, 99);
+  --color-warning-foreground: rgb(26, 15, 13);
+  --color-border: rgb(222, 163, 154);
+  --color-input: rgb(222, 163, 154);
+  --color-ring: rgb(192, 101, 86);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: rgb(252, 249, 248);
+  --foreground: rgb(26, 15, 13);
+  --card: rgb(252, 249, 248);
+  --card-foreground: rgb(26, 15, 13);
+  --popover: rgb(252, 249, 248);
+  --popover-foreground: rgb(26, 15, 13);
+  --primary: rgb(192, 101, 86);
+  --primary-foreground: rgb(252, 249, 248);
+  --secondary: rgb(222, 163, 154);
+  --secondary-foreground: rgb(26, 15, 13);
+  --muted: rgb(222, 163, 154);
+  --muted-foreground: rgb(26, 15, 13);
+  --accent: rgb(212, 115, 99);
+  --accent-foreground: rgb(252, 249, 248);
+  --destructive: rgb(212, 115, 99);
+  --destructive-foreground: rgb(26, 15, 13);
+  --info: rgb(192, 101, 86);
+  --info-foreground: rgb(26, 15, 13);
+  --success: rgb(192, 101, 86);
+  --success-foreground: rgb(26, 15, 13);
+  --warning: rgb(212, 115, 99);
+  --warning-foreground: rgb(26, 15, 13);
+  --border: rgb(222, 163, 154);
+  --input: rgb(222, 163, 154);
+  --ring: rgb(192, 101, 86);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply min-w-80 bg-background font-sans text-foreground; }
+}
