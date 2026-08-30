@@ -3,6 +3,7 @@ import type { Contract as GuardianRailContract } from '../../../../contracts/gua
 import { Contract } from '../../../../contracts/guardian-rail/managed/guardian-rail/contract/index.js';
 import { createUserWitnesses } from './witnesses';
 import type { LocalCredential } from './credential';
+import type { WitnessContext } from '@midnight-ntwrk/compact-runtime';
 
 const compiledAssetsPath = '../../../../contracts/guardian-rail/managed/guardian-rail';
 
@@ -32,6 +33,22 @@ export function createGuardianRailDeploymentContract() {
   return CompiledContract.make<GuardianRailContract>('GuardianRail', Contract)
     .pipe(
       CompiledContract.withWitnesses(vacantWitnesses as never),
+      CompiledContract.withCompiledFileAssets(compiledAssetsPath),
+    );
+}
+
+export function createIssuerRegistrationContract(issuerSecret: Uint8Array) {
+  const issuerWitnesses = {
+    credentialBirthDate: () => { throw new Error('Issuer registration does not use credential witnesses.'); },
+    credentialSalt: () => { throw new Error('Issuer registration does not use credential witnesses.'); },
+    credentialHolderSecret: () => { throw new Error('Issuer registration does not use credential witnesses.'); },
+    issuerSecret(context: WitnessContext<unknown, unknown>) {
+      return [context.privateState, issuerSecret] as [unknown, Uint8Array];
+    },
+  };
+  return CompiledContract.make<GuardianRailContract>('GuardianRail', Contract)
+    .pipe(
+      CompiledContract.withWitnesses(issuerWitnesses as never),
       CompiledContract.withCompiledFileAssets(compiledAssetsPath),
     );
 }

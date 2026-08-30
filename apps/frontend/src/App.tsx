@@ -8,15 +8,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createSession, getDeploymentConfig, submitProof, type ProofSession } from '@/lib/api';
-import { parseLocalCredential, type LocalCredential } from '@/midnight/credential';
+import { parseLocalCredential, parseLocalIssuerKeyPair, type LocalCredential, type LocalIssuerKeyPair } from '@/midnight/credential';
 import { createUserWitnesses } from '@/midnight/witnesses';
 import { connectWallet, getPublicWalletAddress, getWalletConfiguration, getWalletDustBalance } from '@/midnight/wallet';
 import { submitLiveAgeProof } from '@/midnight/live-proof';
 import { deployGuardianRail } from '@/midnight/deploy';
+import { isCredentialRegistered, registerCredentialOnChain } from '@/midnight/register-credential';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { AnimatedGroup } from '../components/motion-primitives/animated-group';
 
 const ageThreshold = 18;
+const configuredContractAddress = process.env.NEXT_PUBLIC_GUARDIAN_RAIL_CONTRACT_ADDRESS;
 
 function isAdult(dateOfBirth: string) {
   const birthday = new Date(`${dateOfBirth}T00:00:00`);
@@ -30,15 +32,18 @@ export default function App() {
   const [session, setSession] = useState<ProofSession>();
   const [birthdate, setBirthdate] = useState('');
   const [credential, setCredential] = useState<LocalCredential>();
+  const [issuerKeypair, setIssuerKeypair] = useState<LocalIssuerKeyPair>();
   const [walletName, setWalletName] = useState<string>();
   const [wallet, setWallet] = useState<ConnectedAPI>();
   const [walletAddress, setWalletAddress] = useState<string>();
   const [walletConfiguration, setWalletConfiguration] = useState<{ indexerUri: string; substrateNodeUri: string }>();
   const [dustBalance, setDustBalance] = useState<bigint>();
   const [walletStatus, setWalletStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
-  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'deployed'>('idle');
-  const [deployedAddress, setDeployedAddress] = useState<string>();
+  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'deployed'>(configuredContractAddress ? 'deployed' : 'idle');
+  const [deployedAddress, setDeployedAddress] = useState<string | undefined>(configuredContractAddress);
   const [deploymentError, setDeploymentError] = useState<string>();
+  const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'registering' | 'submitted' | 'confirmed'>('idle');
+  const [registrationTransactionId, setRegistrationTransactionId] = useState<string>();
   const [status, setStatus] = useState<'idle' | 'proving' | 'unlocked'>('idle');
   const [error, setError] = useState<string>();
 
@@ -62,6 +67,48 @@ export default function App() {
       setCredential(undefined);
       setError('The selected credential could not be read.');
     });
+  }
+
+  function handleIssuerKeypairUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    void file.text().then((contents) => {
+      setIssuerKeypair(parseLocalIssuerKeyPair(JSON.parse(contents)));
+      setError(undefined);
+    }).catch((reason: unknown) => {
+      setIssuerKeypair(undefined);
+      setError(reason instanceof Error ? reason.message : 'The issuer keypair could not be read.');
+    });
+  }
+
+  async function handleCredentialRegistration() {
+    if (!wallet) return setError('Connect Lace before registering the credential.');
+    if (!credential) return setError('Select the credential to register.');
+    if (!issuerKeypair) return setError('Select the matching local issuer keypair.');
+    try {
+      setRegistrationStatus('registering');
+      setError(undefined);
+      const result = await registerCredentialOnChain(wallet, credential, issuerKeypair);
+      setRegistrationTransactionId(result.transactionId);
+      setRegistrationStatus('submitted');
+      // Confirmation is deliberately independent from Lace's signing popup.
+      // Only a commitment observed in Preprod contract state is considered done.
+      void (async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
+          if (await isCredentialRegistered(wallet, credential)) {
+            setIssuerKeypair(undefined);
+            setRegistrationStatus('confirmed');
+            return;
+          }
+        }
+      })().catch((reason: unknown) => {
+        console.warn('Credential registration is still awaiting Indexer confirmation.', reason);
+      });
+    } catch (reason) {
+      setRegistrationStatus('idle');
+      setError(reason instanceof Error ? reason.message : 'Credential registration failed.');
+    }
   }
 
   async function handleWalletConnect() {
@@ -175,6 +222,18 @@ export default function App() {
               <p className="text-sm">Select the credential JSON generated by the local issuer. It is read only in this browser.</p>
               {credential && <p className="text-sm font-bold text-primary">Local credential loaded. DOB and salt remain on this device.</p>}
             </div>
+            {credential && registrationStatus !== 'submitted' && registrationStatus !== 'confirmed' && (
+              <div className="space-y-2">
+                <Label htmlFor="issuer-keypair">Local issuer keypair (registration only)</Label>
+                <Input id="issuer-keypair" type="file" accept="application/json,.json" onChange={handleIssuerKeypairUpload} />
+                <p className="text-sm">The issuer secret stays in this tab and is cleared after the registration transaction is confirmed.</p>
+                <Button className="w-full" type="button" variant="outline" onClick={handleCredentialRegistration} disabled={!wallet || !issuerKeypair || registrationStatus === 'registering'}>
+                  {registrationStatus === 'registering' ? 'Registering credential on Preprod…' : 'Register credential on-chain'}
+                </Button>
+              </div>
+            )}
+            {registrationStatus === 'submitted' && <p className="break-all text-sm font-bold text-primary">Credential registration submitted. Waiting for Preprod Indexer confirmation before it can be used: {registrationTransactionId}</p>}
+            {registrationStatus === 'confirmed' && <p className="break-all text-sm font-bold text-primary">Credential registration confirmed on-chain. Transaction: {registrationTransactionId}</p>}
             <Button className="w-full" type="submit" disabled={!session || status === 'proving' || unlocked}>
               {status === 'proving' ? 'Submitting on-chain proof…' : unlocked ? 'Proof confirmed on-chain' : 'Generate private proof'}
             </Button>

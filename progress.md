@@ -48,16 +48,22 @@ Updated: 2026-08-30
 - Added backend acceptance tests for session isolation and nullifier replay
   protection; backend typecheck passes. Test execution is currently blocked by
   a Node.js host resource error (`uv_os_get_passwd ... ENOMEM`).
+- Deployed Guardian Rail to Midnight Preprod at
+  `615262496a6e09fd689829387af7c11b814c1f6a0c31fb6a91fafce1eb9674f2`.
+- Stored the deployed address in the ignored frontend/backend environments,
+  configured the Preprod Indexer v4 endpoint, and disabled backend demo mode.
+- Added a local issuer registration flow that keeps `issuer-keypair.json` in
+  browser memory, proves issuer authorization, submits through Lace, and waits
+  for on-chain confirmation.
 
 ## Current state
 
-The application code is ready for a deployed contract: the browser submits a
-real `proveAge` transaction through Lace and the backend waits for Indexer
-confirmation before unlocking. The configured environment still needs the
-actual deployed address and Indexer URL.
+The contract is deployed and both applications are configured for live
+Preprod/Indexer operation. The browser can now register the selected local
+credential commitment through an issuer-authorized Lace transaction.
 
 ## Next milestone
 
-Deploy the contract and issuer registration transaction from a wallet-approved
-Preprod session, then put the resulting address and Indexer URL in the ignored
-`.env` files and run the live acceptance flow.
+Register `credential-v2.json` using the matching local issuer keypair, submit a
+real `proveAge` transaction, and confirm that the backend unlocks chat only
+after the Indexer observes the finalized nullifier.

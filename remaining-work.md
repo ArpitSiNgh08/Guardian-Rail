@@ -5,7 +5,7 @@ contract compilation.
 
 ## 1. Validate the Compact contract
 
-- [ ] Add TypeScript witness implementations.
+- [x] Add TypeScript witness implementations.
 - [ ] Add local contract tests.
 - [ ] Test valid registered credentials.
 - [ ] Test underage credentials.
@@ -14,24 +14,24 @@ contract compilation.
 - [ ] Test reused nullifiers.
 - [ ] Test different contexts and policy versions.
 - [ ] Review disclosure and privacy behavior.
-- [ ] Confirm generated artifacts remain ignored by Git.
+- [x] Confirm generated artifacts remain ignored by Git.
 
 ## 2. Complete the credential flow
 
-- [ ] Define the credential format and serialization rules.
-- [ ] Connect mock issuer credentials to Compact witnesses.
+- [x] Define the credential format and serialization rules.
+- [x] Connect mock issuer credentials to Compact witnesses.
 - [ ] Register credential commitments on-chain.
 - [ ] Confirm issuer authorization works.
-- [ ] Remove reliance on a self-entered DOB for the real flow.
+- [x] Remove reliance on a self-entered DOB for the real flow.
 - [ ] Add credential expiry and revocation.
 - [ ] Replace the mock issuer with a real trusted credential provider before
   production.
 
 ## 3. Integrate Lace or 1AM
 
-- [ ] Add DApp Connector integration.
+- [x] Add DApp Connector integration.
 - [ ] Detect, connect, and disconnect the wallet.
-- [ ] Confirm the wallet is on Midnight Preprod.
+- [x] Confirm the wallet is on Midnight Preprod.
 - [ ] Configure the local proof server at `http://localhost:6300`.
 - [ ] Generate a real proof locally.
 - [x] Submit a real Compact transaction through the Lace adapter.
@@ -41,15 +41,15 @@ contract compilation.
 ## 4. Deploy to Preprod
 
 - [x] Add a Lace-backed deployment control in the frontend.
-- [ ] Fund the deployment wallet with Preprod tDUST.
-- [ ] Deploy the compiled contract (requires Lace confirmation).
-- [ ] Record the deployed contract address.
-- [ ] Configure the frontend and backend with the address.
-- [ ] Confirm deployed state through the Indexer.
+- [x] Fund the deployment wallet with Preprod tDUST.
+- [x] Deploy the compiled contract (requires Lace confirmation).
+- [x] Record the deployed contract address.
+- [x] Configure the frontend and backend with the address.
+- [x] Confirm deployed state through the Indexer.
 
 ## 5. Replace the demo verifier
 
-- [ ] Configure the Midnight Indexer URL.
+- [x] Configure the Midnight Indexer URL.
 - [x] Replace runtime `DemoProofVerifier` with Indexer-backed verification.
 - [x] Wait for the submitted transaction and verify contract state through the Indexer.
 - [ ] Verify the context-specific nullifier and policy version.
@@ -86,8 +86,8 @@ contract compilation.
 
 - [ ] Keep architecture diagrams synchronized with the deployed topology.
 - [ ] Document Preprod deployment and rollback procedures.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run build`.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run build`.
 - [ ] Run `npm test --workspace=@guardian-rail/middleware`.
 - [ ] Prepare a clean local demo script.
 - [ ] Prepare a Preprod demo script and replay-attack demonstration.

@@ -7,6 +7,11 @@ export interface LocalCredential {
   readonly signatureHex: string;
 }
 
+export interface LocalIssuerKeyPair {
+  readonly privateKeyHex: string;
+  readonly publicKeyHex: string;
+}
+
 const HEX_32_BYTES = /^[0-9a-f]{64}$/i;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,6 +42,17 @@ export function parseLocalCredential(value: unknown): LocalCredential {
   }
 
   return value as unknown as LocalCredential;
+}
+
+export function parseLocalIssuerKeyPair(value: unknown): LocalIssuerKeyPair {
+  if (!isRecord(value)
+    || typeof value.privateKeyHex !== 'string'
+    || typeof value.publicKeyHex !== 'string'
+    || !HEX_32_BYTES.test(value.privateKeyHex)
+    || !HEX_32_BYTES.test(value.publicKeyHex)) {
+    throw new Error('Invalid local issuer keypair.');
+  }
+  return value as unknown as LocalIssuerKeyPair;
 }
 
 export function birthdateToEpochDays(birthdate: string): bigint {
