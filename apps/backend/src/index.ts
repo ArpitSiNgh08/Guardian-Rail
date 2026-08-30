@@ -17,7 +17,7 @@ function epochDays(isoDate: string) {
 
 const proofSubmissionSchema = z.object({
   sessionId: z.string().uuid(),
-  contextId: z.string().regex(/^[a-f0-9]{32}$/i),
+  contextId: z.string().regex(/^[a-f0-9]{64}$/i),
   nullifier: z.string().regex(/^[a-f0-9]{64}$/i),
   transactionId: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
   disclosed: z.literal(true),

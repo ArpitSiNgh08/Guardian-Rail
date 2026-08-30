@@ -57,7 +57,14 @@ export default function App() {
 
     void file.text().then((contents) => {
       try {
-        setCredential(parseLocalCredential(JSON.parse(contents)));
+        const parsedCredential = parseLocalCredential(JSON.parse(contents));
+        setCredential(parsedCredential);
+        setRegistrationStatus('idle');
+        if (wallet) {
+          void isCredentialRegistered(wallet, parsedCredential).then((registered) => {
+            if (registered) setRegistrationStatus('confirmed');
+          }).catch((reason: unknown) => console.warn('Could not check credential registration.', reason));
+        }
         setError(undefined);
       } catch (reason) {
         setCredential(undefined);
@@ -121,6 +128,9 @@ export default function App() {
       const configuration = await getWalletConfiguration(connection.wallet);
       setWalletConfiguration({ indexerUri: configuration.indexerUri, substrateNodeUri: configuration.substrateNodeUri });
       setDustBalance((await getWalletDustBalance(connection.wallet)).balance);
+      if (credential && await isCredentialRegistered(connection.wallet, credential)) {
+        setRegistrationStatus('confirmed');
+      }
       setWalletStatus('connected');
       setError(undefined);
     } catch (reason) {
@@ -136,6 +146,7 @@ export default function App() {
     const localBirthdate = credential?.birthdate ?? birthdate;
     if (!credential) return setError('Select the issuer credential before using the live proof flow.');
     if (!wallet) return setError('Connect Lace on Midnight Preprod before generating a proof.');
+    if (registrationStatus !== 'confirmed') return setError('Register this credential on-chain and wait for its Preprod confirmation before generating a proof.');
     if (!isAdult(localBirthdate)) return setError('This local credential does not meet the 18+ policy.');
 
     try {
@@ -234,7 +245,7 @@ export default function App() {
             )}
             {registrationStatus === 'submitted' && <p className="break-all text-sm font-bold text-primary">Credential registration submitted. Waiting for Preprod Indexer confirmation before it can be used: {registrationTransactionId}</p>}
             {registrationStatus === 'confirmed' && <p className="break-all text-sm font-bold text-primary">Credential registration confirmed on-chain. Transaction: {registrationTransactionId}</p>}
-            <Button className="w-full" type="submit" disabled={!session || status === 'proving' || unlocked}>
+            <Button className="w-full" type="submit" disabled={!session || !credential || registrationStatus !== 'confirmed' || status === 'proving' || unlocked}>
               {status === 'proving' ? 'Submitting on-chain proof…' : unlocked ? 'Proof confirmed on-chain' : 'Generate private proof'}
             </Button>
           </form>

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 
 export type AccessStatus = 'locked' | 'unlocked';
 
@@ -18,7 +18,9 @@ export class AccessStore {
     const id = randomUUID();
     const session: AccessSession = {
       id,
-      contextId: randomUUID().replaceAll('-', ''),
+      // `proveAge` accepts a Compact `Bytes<32>` context. UUIDs provide only
+      // 16 bytes, so use a cryptographically random 32-byte domain value.
+      contextId: randomBytes(32).toString('hex'),
       status: 'locked',
       createdAt: new Date().toISOString(),
     };
