@@ -6,5 +6,7 @@ test('issues and verifies a signed mock credential', () => {
   const issuer = generateIssuerKeyPair();
   const credential = issueMockCredential('2000-02-29', issuer.privateKeyHex, '2026-08-30T00:00:00.000Z');
   assert.equal(verifyMockCredential(credential), true);
+  assert.equal(credential.saltHex.length, 64);
   assert.equal(verifyMockCredential({ ...credential, birthdate: '2001-02-28' }), false);
+  assert.equal(verifyMockCredential({ ...credential, saltHex: '00' }), false);
 });

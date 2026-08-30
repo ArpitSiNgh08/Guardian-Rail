@@ -18,6 +18,14 @@ Updated: 2026-08-30
 - Added the initial Compact contract with issuer-authorized credential
   registration, age policy checks, policy versioning, and context-specific
   nullifiers.
+- Extended mock credentials with a signed 32-byte salt required for Compact
+  credential commitments.
+- Added browser-side credential validation, epoch-day conversion, holder-secret
+  storage, and generated-contract-compatible user witness callbacks.
+- Connected local credential JSON selection to the frontend; the browser now
+  parses the credential locally and uses its DOB for the demo eligibility check.
+- Added a compiled-contract adapter using Midnight.js `CompiledContract`, the
+  generated Guardian Rail contract, local witnesses, and compiled asset path.
 - Compiled the Compact contract successfully to `contracts/guardian-rail/managed/`.
 - Verified the backend, frontend, typecheck/build flow, and local browser demo.
 - Added backend acceptance tests for session isolation and nullifier replay
@@ -26,12 +34,12 @@ Updated: 2026-08-30
 
 ## Current state
 
-The local demo works end to end, but it uses `DemoProofVerifier`. It is not yet
-a deployed Midnight DApp and does not yet generate or submit a real Compact
-proof.
+The local demo works end to end, but it uses `DemoProofVerifier`. The credential
+and witness layer and generated contract adapter now typecheck, but they are
+not yet connected to Lace providers or real proof submission. It is not yet a
+deployed Midnight DApp.
 
 ## Next milestone
 
-Resolve the local test-runner resource issue, then implement and test Compact
-witness functions before connecting the generated contract package to Lace and
-real proof generation.
+Resolve the local test-runner resource issue, then connect the generated
+contract adapter to Lace providers and real proof generation.
