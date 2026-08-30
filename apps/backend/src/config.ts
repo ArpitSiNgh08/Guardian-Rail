@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fileURLToPath } from 'node:url';
 
 const optionalUrl = z.preprocess(
   (value) => (value === '' ? undefined : value),
@@ -16,7 +17,7 @@ const environmentSchema = z.object({
   DEMO_MODE: z.string().default('false').transform((value) => value === 'true'),
   MIDNIGHT_INDEXER_URL: optionalUrl,
   MIDNIGHT_CONTRACT_ADDRESS: optionalString,
-  ISSUER_KEYPAIR_PATH: z.string().default('credentials/issuer-keypair.json'),
+  ISSUER_KEYPAIR_PATH: z.string().default(fileURLToPath(new URL('../credentials/issuer-keypair.json', import.meta.url))),
   POLICY_MINIMUM_BIRTH_DATE: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default('2008-08-30'),
 });
 

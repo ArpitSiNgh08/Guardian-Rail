@@ -54,7 +54,8 @@ app.get('/api/deployment-config', async (_request, response) => {
       minimumBirthDate: epochDays(config.POLICY_MINIMUM_BIRTH_DATE),
       policyVersion: 1,
     });
-  } catch {
+  } catch (error) {
+    console.error('Unable to prepare Guardian Rail deployment configuration.', error);
     return response.status(500).json({ error: 'Unable to prepare deployment configuration.' });
   }
 });

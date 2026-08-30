@@ -20,7 +20,14 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
   try {
     const asset = await readFile(assetPath);
     const contentType = relativePath.endsWith('.bzkir') ? 'application/octet-stream' : 'application/octet-stream';
-    return new NextResponse(asset, { headers: { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=31536000, immutable' } });
+    return new NextResponse(asset, {
+      headers: {
+        'Content-Type': contentType,
+        // Compiling a contract replaces these files. Never let a stale development
+        // response survive a recompile; production can add content-hashed URLs later.
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch {
     return NextResponse.json({ error: 'Contract asset is not available. Compile the contract first.' }, { status: 404 });
   }

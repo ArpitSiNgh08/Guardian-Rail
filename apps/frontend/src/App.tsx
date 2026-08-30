@@ -38,6 +38,7 @@ export default function App() {
   const [walletStatus, setWalletStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
   const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'deployed'>('idle');
   const [deployedAddress, setDeployedAddress] = useState<string>();
+  const [deploymentError, setDeploymentError] = useState<string>();
   const [status, setStatus] = useState<'idle' | 'proving' | 'unlocked'>('idle');
   const [error, setError] = useState<string>();
 
@@ -107,13 +108,17 @@ export default function App() {
     try {
       setDeploymentStatus('deploying');
       setError(undefined);
+      setDeploymentError(undefined);
       const config = await getDeploymentConfig();
       const address = await deployGuardianRail(wallet, config);
       setDeployedAddress(address);
       setDeploymentStatus('deployed');
     } catch (reason) {
       setDeploymentStatus('idle');
-      setError(reason instanceof Error ? reason.message : 'Contract deployment failed.');
+      const message = reason instanceof Error ? reason.message : 'Contract deployment failed.';
+      console.error('Guardian Rail deployment failed.', reason);
+      setDeploymentError(message);
+      setError(message);
     }
   }
 
@@ -155,6 +160,8 @@ export default function App() {
               {deploymentStatus === 'deploying' ? 'Confirm deployment in Lace…' : deploymentStatus === 'deployed' ? 'Contract deployed' : 'Deploy Guardian Rail contract'}
             </Button>
             {deployedAddress && <p className="break-all text-sm font-bold text-primary">Deployed contract: {deployedAddress}</p>}
+            {deploymentStatus === 'idle' && wallet && !deployedAddress && <p className="text-sm">Lace will ask you to approve the deployment transaction.</p>}
+            {deploymentError && <p className="text-sm font-bold text-destructive">Deployment failed: {deploymentError}</p>}
           </div>
           <form className="space-y-4" onSubmit={handleProof}>
             <div className="space-y-2">

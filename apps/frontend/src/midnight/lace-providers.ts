@@ -1,10 +1,12 @@
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { CostModel } from '@midnight-ntwrk/ledger-v8';
 import { Transaction } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import type { FinalizedTransaction } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import type { MidnightProvider, WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { createProofProvider } from '@midnight-ntwrk/midnight-js-types';
 import { createGuardianRailZkConfigProvider } from './zk-config';
+import { isWalletChannelShutdownError, refreshWalletConnection } from './wallet';
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -20,15 +22,17 @@ export function createLaceWalletProvider(
   wallet: ConnectedAPI,
   keys: { coin: string; encryption: string },
 ): WalletProvider {
+  let activeWallet = wallet;
   return {
     async balanceTx(tx, ttl) {
-      const result = await wallet.balanceUnsealedTransaction(bytesToHex(tx.serialize()), {
+      activeWallet = await refreshWalletConnection(activeWallet);
+      const result = await activeWallet.balanceUnsealedTransaction(bytesToHex(tx.serialize()), {
         payFees: true,
       });
       const balanced = Transaction.deserialize(
         'signature',
         'proof',
-        'pre-binding',
+        'binding',
         hexToBytes(result.tx),
       );
       void ttl;
@@ -46,22 +50,34 @@ export function createLaceWalletProvider(
 }
 
 export function createLaceMidnightProvider(wallet: ConnectedAPI): MidnightProvider {
+  let activeWallet = wallet;
   return {
     async submitTx(tx) {
-      await wallet.submitTransaction(bytesToHex(tx.serialize()));
+      const serialized = bytesToHex(tx.serialize());
+      activeWallet = await refreshWalletConnection(activeWallet);
+      try {
+        await activeWallet.submitTransaction(serialized);
+      } catch (reason) {
+        if (!isWalletChannelShutdownError(reason)) throw reason;
+        // Lace can close the popup's remote channel after signing. Reconnect and
+        // submit the same transaction; its identifier makes this retry idempotent.
+        activeWallet = await refreshWalletConnection(activeWallet);
+        await activeWallet.submitTransaction(serialized);
+      }
       return tx.identifiers()[0];
     },
   };
 }
 
 export async function createLaceProofProvider(wallet: ConnectedAPI) {
+  const activeWallet = await refreshWalletConnection(wallet);
   const zkConfigProvider = createGuardianRailZkConfigProvider();
-  const provingProvider = await wallet.getProvingProvider({
+  const provingProvider = await activeWallet.getProvingProvider({
     getZKIR: (circuit) => zkConfigProvider.getZKIR(circuit as 'proveAge' | 'registerCredential'),
     getProverKey: (circuit) => zkConfigProvider.getProverKey(circuit as 'proveAge' | 'registerCredential'),
     getVerifierKey: (circuit) => zkConfigProvider.getVerifierKey(circuit as 'proveAge' | 'registerCredential'),
   });
-  return createProofProvider(provingProvider);
+  return createProofProvider(provingProvider, CostModel.initialCostModel());
 }
 
 export function createLacePublicDataProvider(walletConfiguration: { indexerUri: string; indexerWsUri: string }) {

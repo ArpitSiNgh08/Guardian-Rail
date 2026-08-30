@@ -1,21 +1,27 @@
 import { createUnprovenCallTx, getPublicStates, submitTxAsync } from '@midnight-ntwrk/midnight-js-contracts';
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { pureCircuits } from '../../../../contracts/guardian-rail/managed/guardian-rail/contract/index.js';
 import { createGuardianRailContract } from './contract';
 import { getOrCreateHolderSecret, hexToBytes, type LocalCredential } from './credential';
 import { createLaceMidnightProvider, createLaceProofProvider, createLacePublicDataProvider, createLaceWalletProvider } from './lace-providers';
 import { createGuardianRailZkConfigProvider } from './zk-config';
+import { refreshWalletConnection } from './wallet';
+import { getBrowserPrivateStateProvider } from './browser-private-state-provider';
 
 function hexToByteArray(value: string) {
   return hexToBytes(value);
 }
 
 export async function submitLiveAgeProof(wallet: ConnectedAPI, credential: LocalCredential, contextId: string) {
+  setNetworkId('preprod');
+  wallet = await refreshWalletConnection(wallet);
   const contractAddress = process.env.NEXT_PUBLIC_GUARDIAN_RAIL_CONTRACT_ADDRESS;
   if (!contractAddress) throw new Error('The deployed Guardian Rail contract address is not configured.');
   const [addresses, configuration] = await Promise.all([wallet.getShieldedAddresses(), wallet.getConfiguration()]);
   const publicDataProvider = createLacePublicDataProvider(configuration);
   const providers = {
+    privateStateProvider: getBrowserPrivateStateProvider(),
     publicDataProvider,
     zkConfigProvider: createGuardianRailZkConfigProvider(),
     proofProvider: await createLaceProofProvider(wallet),
