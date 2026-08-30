@@ -46,6 +46,9 @@ copy apps\frontend\.env.example apps\frontend\.env
 npm run env:up
 npm run dev:backend
 npm run dev:frontend
+
+npm run issuer:generate-keypair --workspace=@guardian-rail/middleware
+npm run issuer:issue --workspace=@guardian-rail/middleware
 ```
 
 Open `http://localhost:3000`. For the live Preprod flow, follow [setup.md](setup.md): it covers Lace, tDUST, environment values, registration, and proof confirmation.

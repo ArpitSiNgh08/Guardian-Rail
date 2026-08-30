@@ -21,6 +21,7 @@ Show the architecture diagram in the root README, then return to the app.
 ```bash
 cd /mnt/c/Arpit/Coding/Guardian-Rail/contracts/guardian-rail
 compact compile src/guardian-rail.compact managed/guardian-rail
+ls -la managed/guardian-rail
 ```
 
 Briefly show the generated `managed/guardian-rail/` folders. Do not linger on key files.

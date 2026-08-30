@@ -19,7 +19,9 @@ const proofSubmissionSchema = z.object({
   sessionId: z.string().uuid(),
   contextId: z.string().regex(/^[a-f0-9]{64}$/i),
   nullifier: z.string().regex(/^[a-f0-9]{64}$/i),
-  transactionId: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  // Lace/ledger transaction identifiers are opaque transport values. Access is
+  // authorized from the on-chain nullifier, never from this client field.
+  transactionId: z.string().min(1).max(256).optional(),
   disclosed: z.literal(true),
 });
 
@@ -72,7 +74,10 @@ app.get('/api/sessions/:sessionId/access', (request, response) => {
 
 app.post('/api/proofs', async (request, response) => {
   const parsed = proofSubmissionSchema.safeParse(request.body);
-  if (!parsed.success) return response.status(400).json({ error: 'Invalid proof submission.' });
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((issue) => issue.path.join('.') || 'request').join(', ');
+    return response.status(400).json({ error: `Invalid proof submission fields: ${fields}.` });
+  }
 
   const session = accessStore.getSession(parsed.data.sessionId);
   if (!session || session.contextId !== parsed.data.contextId) {
