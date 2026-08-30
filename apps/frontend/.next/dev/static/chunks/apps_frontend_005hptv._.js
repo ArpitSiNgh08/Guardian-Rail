@@ -1252,7 +1252,7 @@ __turbopack_context__.s([
     ()=>submitDemoProof
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
-const apiUrl = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const apiUrl = ("TURBOPACK compile-time value", "http://localhost:4000") ?? 'http://localhost:4000';
 async function request(path, init) {
     const response = await fetch(`${apiUrl}${path}`, {
         ...init,

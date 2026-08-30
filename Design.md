@@ -18,6 +18,19 @@ If, after checking all four sources, truly nothing fits: stop and ask before han
 
 > **Setup:** Initialize the Coss UI registry with `npx shadcn@latest init @coss/style`, then add components through the Coss registry. See https://coss.com/ui/docs/get-started.
 
+### Current implementation
+
+- **Framework:** Next.js App Router in `apps/frontend/app/`.
+- **Coss UI components:** `apps/frontend/src/components/ui/`.
+- **Motion Primitives:** `apps/frontend/components/motion-primitives/`.
+- **Global tokens:** `apps/frontend/src/index.css`, imported by
+  `apps/frontend/app/globals.css`.
+
+The age-proof interaction is a browser client component because it will handle
+wallet APIs, local credential data, and proof generation. Do not move DOB or
+credential handling into a Next.js server component, server action, API route,
+or the Express backend.
+
 ### Using each library's MCP server
 
 Where a component library above exposes an MCP server, coding agents should connect to it and use it to:
@@ -86,3 +99,5 @@ Before writing any UI code in a session:
 3. For each one, check coss.com/UI → Motion Primitives → shared/common components → Shadcn, in that order, using the library's MCP server where available.
 4. Only write custom code for layout/composition that glues sourced components together — never for the components themselves.
 5. Apply colors and fonts exclusively from the token set in Section 2.
+6. Preserve the client-only privacy boundary for wallet, DOB, credential, and
+   proof-generation code.

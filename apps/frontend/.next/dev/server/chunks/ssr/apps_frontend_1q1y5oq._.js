@@ -1053,7 +1053,7 @@ __turbopack_context__.s([
     "submitDemoProof",
     ()=>submitDemoProof
 ]);
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const apiUrl = ("TURBOPACK compile-time value", "http://localhost:4000") ?? 'http://localhost:4000';
 async function request(path, init) {
     const response = await fetch(`${apiUrl}${path}`, {
         ...init,
