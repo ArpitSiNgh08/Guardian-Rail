@@ -1,0 +1,6 @@
+{
+  "name": "guardian-rail",
+  "framework": "nextjs",
+  "buildCommand": "npm run build --workspace=@guardian-rail/frontend",
+  "outputDirectory": "apps/frontend/.next"
+}

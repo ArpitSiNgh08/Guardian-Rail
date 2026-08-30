@@ -2,8 +2,14 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 
-const assetsRoot = path.resolve(process.cwd(), '../../contracts/guardian-rail/managed/guardian-rail');
 const allowedPath = /^(keys|zkir)\/(?:[a-zA-Z0-9_-]+)\.(?:prover|verifier|bzkir)$/;
+
+const candidateRoots = [
+  path.resolve(process.cwd(), 'public/contract-assets'),
+  path.resolve(process.cwd(), 'apps/frontend/public/contract-assets'),
+  path.resolve(process.cwd(), '../../contracts/guardian-rail/managed/guardian-rail'),
+  path.resolve(process.cwd(), 'contracts/guardian-rail/managed/guardian-rail'),
+];
 
 export async function GET(_request: Request, context: { params: Promise<{ path: string[] }> }) {
   const segments = (await context.params).path;
@@ -12,23 +18,23 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
     return NextResponse.json({ error: 'Unknown contract asset.' }, { status: 404 });
   }
 
-  const assetPath = path.resolve(assetsRoot, relativePath);
-  if (!assetPath.startsWith(`${assetsRoot}${path.sep}`)) {
-    return NextResponse.json({ error: 'Invalid contract asset path.' }, { status: 400 });
+  for (const root of candidateRoots) {
+    const assetPath = path.resolve(root, relativePath);
+    if (!assetPath.startsWith(`${root}${path.sep}`)) {
+      continue;
+    }
+    try {
+      const asset = await readFile(/*turbopackIgnore: true*/ assetPath);
+      return new NextResponse(asset, {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        },
+      });
+    } catch {
+      // Try next candidate root
+    }
   }
 
-  try {
-    const asset = await readFile(assetPath);
-    const contentType = relativePath.endsWith('.bzkir') ? 'application/octet-stream' : 'application/octet-stream';
-    return new NextResponse(asset, {
-      headers: {
-        'Content-Type': contentType,
-        // Compiling a contract replaces these files. Never let a stale development
-        // response survive a recompile; production can add content-hashed URLs later.
-        'Cache-Control': 'no-store',
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'Contract asset is not available. Compile the contract first.' }, { status: 404 });
-  }
+  return NextResponse.json({ error: 'Contract asset is not available. Compile the contract first.' }, { status: 404 });
 }
