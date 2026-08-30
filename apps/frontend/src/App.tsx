@@ -7,9 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createSession, submitDemoProof, type ProofSession } from '@/lib/api';
+import { createSession, getDeploymentConfig, submitProof, type ProofSession } from '@/lib/api';
 import { parseLocalCredential, type LocalCredential } from '@/midnight/credential';
 import { createUserWitnesses } from '@/midnight/witnesses';
+import { connectWallet, getPublicWalletAddress, getWalletConfiguration, getWalletDustBalance } from '@/midnight/wallet';
+import { submitLiveAgeProof } from '@/midnight/live-proof';
+import { deployGuardianRail } from '@/midnight/deploy';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { AnimatedGroup } from '../components/motion-primitives/animated-group';
 
 const ageThreshold = 18;
@@ -21,25 +25,19 @@ function isAdult(dateOfBirth: string) {
   return !Number.isNaN(birthday.getTime()) && birthday <= cutoff;
 }
 
-async function sha256(value: string) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function getLocalSecret() {
-  const key = 'guardian-rail-demo-secret';
-  const stored = localStorage.getItem(key);
-  if (stored) return stored;
-  const secret = crypto.randomUUID();
-  localStorage.setItem(key, secret);
-  return secret;
-}
 
 export default function App() {
   const [session, setSession] = useState<ProofSession>();
   const [birthdate, setBirthdate] = useState('');
   const [credential, setCredential] = useState<LocalCredential>();
+  const [walletName, setWalletName] = useState<string>();
+  const [wallet, setWallet] = useState<ConnectedAPI>();
+  const [walletAddress, setWalletAddress] = useState<string>();
+  const [walletConfiguration, setWalletConfiguration] = useState<{ indexerUri: string; substrateNodeUri: string }>();
+  const [dustBalance, setDustBalance] = useState<bigint>();
+  const [walletStatus, setWalletStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
+  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'deployed'>('idle');
+  const [deployedAddress, setDeployedAddress] = useState<string>();
   const [status, setStatus] = useState<'idle' | 'proving' | 'unlocked'>('idle');
   const [error, setError] = useState<string>();
 
@@ -65,22 +63,57 @@ export default function App() {
     });
   }
 
+  async function handleWalletConnect() {
+    try {
+      setWalletStatus('connecting');
+      const connection = await connectWallet('preprod');
+      setWallet(connection.wallet);
+      setWalletName(connection.name);
+      setWalletAddress(await getPublicWalletAddress(connection.wallet));
+      const configuration = await getWalletConfiguration(connection.wallet);
+      setWalletConfiguration({ indexerUri: configuration.indexerUri, substrateNodeUri: configuration.substrateNodeUri });
+      setDustBalance((await getWalletDustBalance(connection.wallet)).balance);
+      setWalletStatus('connected');
+      setError(undefined);
+    } catch (reason) {
+      setWalletStatus('idle');
+      setError(reason instanceof Error ? reason.message : 'Wallet connection failed.');
+    }
+  }
+
   async function handleProof(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(undefined);
     if (!session) return setError('A proof session is still being prepared.');
     const localBirthdate = credential?.birthdate ?? birthdate;
+    if (!credential) return setError('Select the issuer credential before using the live proof flow.');
+    if (!wallet) return setError('Connect Lace on Midnight Preprod before generating a proof.');
     if (!isAdult(localBirthdate)) return setError('This local credential does not meet the 18+ policy.');
 
     try {
       setStatus('proving');
-      if (credential) createUserWitnesses(localStorage, credential);
-      const nullifier = await sha256(`${getLocalSecret()}:${session.contextId}`);
-      await submitDemoProof({ sessionId: session.id, contextId: session.contextId, nullifier });
+      createUserWitnesses(localStorage, credential);
+      const liveProof = await submitLiveAgeProof(wallet, credential, session.contextId);
+      await submitProof({ sessionId: session.id, contextId: session.contextId, ...liveProof });
       setStatus('unlocked');
     } catch (reason) {
       setStatus('idle');
       setError(reason instanceof Error ? reason.message : 'Proof submission failed.');
+    }
+  }
+
+  async function handleDeploy() {
+    if (!wallet) return setError('Connect Lace on Midnight Preprod before deployment.');
+    try {
+      setDeploymentStatus('deploying');
+      setError(undefined);
+      const config = await getDeploymentConfig();
+      const address = await deployGuardianRail(wallet, config);
+      setDeployedAddress(address);
+      setDeploymentStatus('deployed');
+    } catch (reason) {
+      setDeploymentStatus('idle');
+      setError(reason instanceof Error ? reason.message : 'Contract deployment failed.');
     }
   }
 
@@ -89,7 +122,7 @@ export default function App() {
   return (
     <AnimatedGroup as="main" asChild="div" preset="blur-slide" className="mx-auto grid min-h-screen max-w-5xl content-center gap-6 px-5 py-10 md:grid-cols-2">
       <section className="space-y-5">
-        <Badge variant="secondary">Guardian Rail · local demo</Badge>
+        <Badge variant="secondary">Guardian Rail · Midnight Preprod</Badge>
         <div className="space-y-3">
           <p className="font-heading text-sm font-bold uppercase tracking-[0.16em] text-primary">Private access control</p>
           <h1 className="font-heading text-4xl font-bold tracking-tight">Prove eligibility, not identity.</h1>
@@ -97,7 +130,7 @@ export default function App() {
         </div>
         <Alert>
           <AlertTitle>Data stays on this device</AlertTitle>
-          <AlertDescription>Your birthdate is checked in the browser and is never sent to this backend. This initial slice uses a demo verifier until the Midnight contract and Indexer are wired in.</AlertDescription>
+          <AlertDescription>Your credential and witness values stay in this browser. The backend unlocks chat only after the Midnight Indexer confirms the on-chain proof.</AlertDescription>
         </Alert>
       </section>
 
@@ -110,6 +143,19 @@ export default function App() {
           <CardDescription>Prove that you meet the 18+ policy for this chat session.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Button type="button" variant="outline" className="w-full" onClick={handleWalletConnect} disabled={walletStatus === 'connecting' || walletStatus === 'connected'}>
+              {walletStatus === 'connecting' ? 'Connecting wallet…' : walletStatus === 'connected' ? `${walletName ?? 'Wallet'} connected` : 'Connect Lace wallet'}
+            </Button>
+            {walletAddress && <p className="break-all text-sm">Connected address: {walletAddress}</p>}
+            {walletConfiguration && <p className="text-sm">Preprod network verified. Indexer and node configuration received from wallet.</p>}
+            {dustBalance !== undefined && <p className="text-sm">Available tDUST: {dustBalance.toString()}</p>}
+            {!walletAddress && <p className="text-sm">Connect Lace on Midnight Preprod before using the live proof flow.</p>}
+            <Button type="button" variant="outline" className="w-full" onClick={handleDeploy} disabled={!wallet || deploymentStatus !== 'idle'}>
+              {deploymentStatus === 'deploying' ? 'Confirm deployment in Lace…' : deploymentStatus === 'deployed' ? 'Contract deployed' : 'Deploy Guardian Rail contract'}
+            </Button>
+            {deployedAddress && <p className="break-all text-sm font-bold text-primary">Deployed contract: {deployedAddress}</p>}
+          </div>
           <form className="space-y-4" onSubmit={handleProof}>
             <div className="space-y-2">
               <Label htmlFor="birthdate">Date of birth</Label>
@@ -123,7 +169,7 @@ export default function App() {
               {credential && <p className="text-sm font-bold text-primary">Local credential loaded. DOB and salt remain on this device.</p>}
             </div>
             <Button className="w-full" type="submit" disabled={!session || status === 'proving' || unlocked}>
-              {status === 'proving' ? 'Generating local proof…' : unlocked ? 'Proof accepted' : 'Generate private proof'}
+              {status === 'proving' ? 'Submitting on-chain proof…' : unlocked ? 'Proof confirmed on-chain' : 'Generate private proof'}
             </Button>
           </form>
           {error && <Alert variant="error"><AlertTitle>Unable to verify</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}

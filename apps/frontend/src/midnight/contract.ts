@@ -21,3 +21,17 @@ export function createGuardianRailContract(storage: Storage, credential: LocalCr
       CompiledContract.withCompiledFileAssets(compiledAssetsPath),
     );
 }
+
+export function createGuardianRailDeploymentContract() {
+  const vacantWitnesses = {
+    credentialBirthDate: () => { throw new Error('Deployment does not use credential witnesses.'); },
+    credentialSalt: () => { throw new Error('Deployment does not use credential witnesses.'); },
+    credentialHolderSecret: () => { throw new Error('Deployment does not use credential witnesses.'); },
+    issuerSecret: () => { throw new Error('Deployment does not use credential witnesses.'); },
+  };
+  return CompiledContract.make<GuardianRailContract>('GuardianRail', Contract)
+    .pipe(
+      CompiledContract.withWitnesses(vacantWitnesses as never),
+      CompiledContract.withCompiledFileAssets(compiledAssetsPath),
+    );
+}

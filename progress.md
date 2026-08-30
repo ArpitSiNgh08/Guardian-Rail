@@ -26,20 +26,38 @@ Updated: 2026-08-30
   parses the credential locally and uses its DOB for the demo eligibility check.
 - Added a compiled-contract adapter using Midnight.js `CompiledContract`, the
   generated Guardian Rail contract, local witnesses, and compiled asset path.
+- Added browser wallet discovery and Preprod connection UX through the Midnight
+  DApp Connector API, including public unshielded-address display.
+- Added a wallet configuration preflight that verifies Preprod and reads the
+  wallet-provided Indexer and node endpoints before live transactions.
+- Added a constrained Next.js route for serving compiled ZK assets and a
+  browser `FetchZkConfigProvider` factory; the local `proveAge` ZKIR endpoint
+  responds successfully.
+- Added Lace-backed proving, transaction-balancing, finalization, and submit
+  adapters for Midnight.js.
+- Added a Preprod deployment button that receives only a derived issuer-key
+  commitment from the local backend and sends the deployment transaction to
+  Lace for user approval.
+- Added wallet DUST-balance capture and display so live transaction readiness is
+  visible before deployment or proof submission.
 - Compiled the Compact contract successfully to `contracts/guardian-rail/managed/`.
-- Verified the backend, frontend, typecheck/build flow, and local browser demo.
+- Added the live `proveAge` transaction flow and replaced runtime demo
+  verification with Indexer state/transaction confirmation.
+- Verified the backend/frontend typecheck and production builds after the live
+  integration changes.
 - Added backend acceptance tests for session isolation and nullifier replay
   protection; backend typecheck passes. Test execution is currently blocked by
   a Node.js host resource error (`uv_os_get_passwd ... ENOMEM`).
 
 ## Current state
 
-The local demo works end to end, but it uses `DemoProofVerifier`. The credential
-and witness layer and generated contract adapter now typecheck, but they are
-not yet connected to Lace providers or real proof submission. It is not yet a
-deployed Midnight DApp.
+The application code is ready for a deployed contract: the browser submits a
+real `proveAge` transaction through Lace and the backend waits for Indexer
+confirmation before unlocking. The configured environment still needs the
+actual deployed address and Indexer URL.
 
 ## Next milestone
 
-Resolve the local test-runner resource issue, then connect the generated
-contract adapter to Lace providers and real proof generation.
+Deploy the contract and issuer registration transaction from a wallet-approved
+Preprod session, then put the resulting address and Indexer URL in the ignored
+`.env` files and run the live acceptance flow.

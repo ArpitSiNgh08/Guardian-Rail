@@ -12,15 +12,16 @@ chat after querying the Indexer.
 
 ## Current status
 
-Guardian Rail has a working **local demo flow** and the first version of its
-Compact contract source. It is not yet an end-to-end Midnight DApp.
+Guardian Rail has a working browser-to-Lace live transaction path and the first
+version of its Compact contract source. Preprod deployment and issuer
+registration still require wallet-signed transactions.
 
 1. The Next.js browser client creates a private access session.
 2. The user enters a DOB, which is evaluated only in the browser.
-3. The browser generates a context-bound demo nullifier and submits that plus
-   the disclosed boolean; it does not submit the DOB.
-4. The Express backend unlocks the protected chat and rejects a reused
-   nullifier.
+3. The browser generates and submits a context-bound `proveAge` transaction
+   through Lace; it does not submit the DOB.
+4. The Express backend waits for Indexer confirmation of the transaction and
+   on-chain nullifier before unlocking chat.
 
 The demo demonstrates the intended privacy boundary, session lifecycle, and
 replay-protection UX. It must not be used as a production age-verification
@@ -37,12 +38,11 @@ generation is connected, and the backend verifies results through the Indexer.
   private age-policy assertion, policy versioning, and per-context spent
   nullifiers: `contracts/guardian-rail/src/guardian-rail.compact`.
 
-### What is intentionally still a demo
+### What still requires Preprod setup
 
-- The browser currently evaluates DOB locally; it does not generate or submit
-  a Midnight proof yet.
-- The Express verifier currently accepts the demo proof format; it does not
-  query a Midnight Indexer.
+- The contract has not yet been deployed and its address is not in `.env`.
+- The issuer credential commitment has not yet been registered on-chain.
+- Credential expiry/revocation and a production issuer remain future work.
 - The mock issuer signature is not yet represented inside the Compact proof.
   In the first contract version, on-chain credential registration by the issuer
   is the trusted issuance step.

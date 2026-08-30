@@ -34,15 +34,15 @@ contract compilation.
 - [ ] Confirm the wallet is on Midnight Preprod.
 - [ ] Configure the local proof server at `http://localhost:6300`.
 - [ ] Generate a real proof locally.
-- [ ] Submit a real Compact transaction.
+- [x] Submit a real Compact transaction through the Lace adapter.
 - [ ] Display wallet, proving, submission, confirmation, and error states.
 - [ ] Handle rejected transactions and insufficient funds.
 
 ## 4. Deploy to Preprod
 
-- [ ] Add deployment scripts.
+- [x] Add a Lace-backed deployment control in the frontend.
 - [ ] Fund the deployment wallet with Preprod tDUST.
-- [ ] Deploy the compiled contract.
+- [ ] Deploy the compiled contract (requires Lace confirmation).
 - [ ] Record the deployed contract address.
 - [ ] Configure the frontend and backend with the address.
 - [ ] Confirm deployed state through the Indexer.
@@ -50,8 +50,8 @@ contract compilation.
 ## 5. Replace the demo verifier
 
 - [ ] Configure the Midnight Indexer URL.
-- [ ] Replace `DemoProofVerifier` with Indexer-backed verification.
-- [ ] Verify the deployed contract and transaction result.
+- [x] Replace runtime `DemoProofVerifier` with Indexer-backed verification.
+- [x] Wait for the submitted transaction and verify contract state through the Indexer.
 - [ ] Verify the context-specific nullifier and policy version.
 - [ ] Reject invalid, expired, revoked, and replayed proofs.
 - [ ] Add retry and timeout handling for Indexer confirmation delays.
@@ -59,7 +59,7 @@ contract compilation.
 
 ## 6. End-to-end acceptance tests
 
-- [ ] Locked chat becomes unlocked only after Indexer confirmation.
+- [x] Locked chat becomes unlocked only after Indexer confirmation.
 - [ ] Underage proof is rejected.
 - [ ] Unregistered credential is rejected.
 - [ ] Invalid issuer is rejected.
@@ -92,4 +92,3 @@ contract compilation.
 - [ ] Prepare a clean local demo script.
 - [ ] Prepare a Preprod demo script and replay-attack demonstration.
 - [ ] Record a backup demo video.
-

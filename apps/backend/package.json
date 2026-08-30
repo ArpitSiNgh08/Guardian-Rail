@@ -4,14 +4,17 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts",
+    "predev": "tsc",
+    "dev": "node --env-file=.env --watch dist/index.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/issuer/mock-credential.test.ts src/access-store.test.ts",
+    "test": "node --import tsx/esm --test src/issuer/mock-credential.test.ts src/access-store.test.ts",
     "issuer:generate-keypair": "tsx src/issuer/cli.ts generate-keypair",
     "issuer:issue": "tsx src/issuer/cli.ts issue"
   },
   "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
     "@noble/curves": "latest",
     "cors": "^2.8.6",
     "express": "latest",
