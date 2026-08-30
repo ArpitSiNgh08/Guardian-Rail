@@ -1,0 +1,101 @@
+pragma language_version 0.23;
+
+// Guardian Rail v0: a privacy-preserving age-policy gate.
+//
+// A credential is represented on-chain only by a salted commitment. Its birth
+// date and salt are supplied locally through witnesses during proof generation.
+// The `proveAge` circuit exposes only a context-specific nullifier.
+
+witness credentialBirthDate(): Uint<32>;
+witness credentialSalt(): Bytes<32>;
+witness credentialHolderSecret(): Bytes<32>;
+witness issuerSecret(): Bytes<32>;
+
+// Public policy metadata. `minimumBirthDate` is the latest date of birth that
+// qualifies for the policy, encoded as whole days since the Unix epoch.
+export ledger issuerKeyCommitment: Bytes<32>;
+export ledger minimumBirthDate: Uint<32>;
+export ledger policyVersion: Uint<16>;
+
+// A registered commitment says that the issuer issued a credential with that
+// hidden birth date and salt. `spentNullifiers` prevents re-use for a context.
+export ledger credentialCommitments: Set<Bytes<32>>;
+export ledger spentNullifiers: Set<Bytes<32>>;
+
+constructor(
+  _issuerKeyCommitment: Bytes<32>,
+  _minimumBirthDate: Uint<32>,
+  _policyVersion: Uint<16>
+) {
+  assert(_policyVersion > 0, "Policy version must be positive");
+  issuerKeyCommitment = disclose(_issuerKeyCommitment);
+  minimumBirthDate = disclose(_minimumBirthDate);
+  policyVersion = disclose(_policyVersion);
+}
+
+// Called by the credential issuer after it has issued a credential to a user.
+// Knowledge of the preimage of `issuerKeyCommitment` authorizes registration.
+export circuit registerCredential(commitment: Bytes<32>): [] {
+  assert(
+    issuerKeyCommitment == issuerKeyCommitmentFor(issuerSecret()),
+    "Only the credential issuer can register credentials"
+  );
+  assert(!credentialCommitments.member(disclose(commitment)), "Credential already registered");
+  credentialCommitments.insert(disclose(commitment));
+}
+
+// Proves, without revealing a birth date or holder secret, that a locally-held
+// issuer-registered credential satisfies the configured age policy. The output
+// is safe to disclose: it is unique to this policy version and application
+// context, so it cannot be used as a global user identifier.
+export circuit proveAge(contextId: Bytes<32>): Bytes<32> {
+  const credentialCommitment = credentialCommitmentFor(
+    credentialBirthDate(),
+    credentialSalt()
+  );
+  assert(
+    credentialCommitments.member(disclose(credentialCommitment)),
+    "Credential is not registered by this issuer"
+  );
+  assert(credentialBirthDate() <= minimumBirthDate, "Age policy is not satisfied");
+
+  const nullifier = nullifierFor(
+    contextId,
+    credentialHolderSecret(),
+    policyVersion
+  );
+  assert(!spentNullifiers.member(disclose(nullifier)), "Proof already used for this context");
+  spentNullifiers.insert(disclose(nullifier));
+  return disclose(nullifier);
+}
+
+export pure circuit issuerKeyCommitmentFor(secret: Bytes<32>): Bytes<32> {
+  return persistentHash<[Bytes<32>, Bytes<32>]>([
+    pad(32, "guardian-rail:issuer:v1"),
+    secret
+  ]);
+}
+
+export pure circuit credentialCommitmentFor(
+  birthDate: Uint<32>,
+  salt: Bytes<32>
+): Bytes<32> {
+  return persistentHash<[Bytes<32>, Uint<32>, Bytes<32>]>([
+    pad(32, "guardian-rail:credential:v1"),
+    birthDate,
+    salt
+  ]);
+}
+
+export pure circuit nullifierFor(
+  contextId: Bytes<32>,
+  holderSecret: Bytes<32>,
+  version: Uint<16>
+): Bytes<32> {
+  return persistentHash<[Bytes<32>, Bytes<32>, Bytes<32>, Uint<16>]>([
+    pad(32, "guardian-rail:nullifier:v1"),
+    contextId,
+    holderSecret,
+    version
+  ]);
+}

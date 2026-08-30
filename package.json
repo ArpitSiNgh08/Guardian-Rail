@@ -9,6 +9,8 @@
   "scripts": {
     "dev:frontend": "npm run dev --workspace=@guardian-rail/frontend",
     "dev:backend": "npm run dev --workspace=@guardian-rail/middleware",
+    "env:up": "docker compose --env-file infra/.env.example -f infra/docker-compose.yml up -d",
+    "env:down": "docker compose -f infra/docker-compose.yml down",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

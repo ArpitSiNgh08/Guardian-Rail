@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/issuer/mock-credential.test.ts",
+    "issuer:generate-keypair": "tsx src/issuer/cli.ts generate-keypair",
+    "issuer:issue": "tsx src/issuer/cli.ts issue"
   },
   "dependencies": {
     "@noble/curves": "latest",

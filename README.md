@@ -85,6 +85,15 @@ npm run dev:frontend
 
 Open `http://localhost:3000`. The backend defaults to `http://localhost:4000`.
 
+Create a local test credential (the output is ignored by Git):
+
+```bash
+npm run issuer:generate-keypair --workspace=@guardian-rail/middleware
+npm run issuer:issue --workspace=@guardian-rail/middleware -- 2000-01-01
+```
+
+Start the documented local proof server with `npm run env:up`.
+
 ## Verification
 
 ```bash
@@ -107,7 +116,7 @@ component sourcing order and token system.
 - Add local witness functions that read a signed credential and user secret
   without exposing either to the backend.
 - Add the mock issuer CLI and credential storage format for local development.
-- Configure Docker for a local Midnight node, proof server, and Indexer.
+- Configure a local Midnight node and Indexer (the proof-server Compose setup is ready).
 - Replace `DemoProofVerifier` with an Indexer-backed verifier that checks the
   deployed contract state.
 - Add Lace/1AM DApp Connector integration and transaction/proof status UX.
