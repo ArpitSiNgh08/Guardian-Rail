@@ -1,5 +1,7 @@
 pragma language_version 0.23;
 
+import CompactStandardLibrary;
+
 // Guardian Rail v0: a privacy-preserving age-policy gate.
 //
 // A credential is represented on-chain only by a salted commitment. Its birth

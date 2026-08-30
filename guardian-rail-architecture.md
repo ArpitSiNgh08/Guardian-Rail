@@ -16,7 +16,7 @@ flowchart TB
         ProofServer["Local Proof Server<br/>(Docker, :6300)"]
     end
 
-    subgraph Frontend["Guardian Rail Frontend (React + Vite)"]
+    subgraph Frontend["Guardian Rail Frontend (Next.js App Router)"]
         Connector["DApp Connector API"]
         UIFlow["Connect wallet → enter DOB locally<br/>→ request proof"]
     end
@@ -62,7 +62,7 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant F as Frontend (React)
+    participant F as Frontend (Next.js)
     participant W as Wallet (Lace/1AM)
     participant P as Local Proof Server
     participant N as Midnight Node
@@ -104,20 +104,24 @@ sequenceDiagram
 ## 4. Trust boundaries (what's visible where)
 
 - **Inside the user's device:** raw birthdate, issuer signature, user secret key. This never crosses out.
-- **Crossing to the wallet/proof server:** the same private data, but only to *generate* a proof — the proof server is local (Docker on the user's own machine or the wallet's own sandboxed environment), not a third-party server.
+- **Crossing to the wallet/proof server:** the same private data, but only to *generate* a proof — the proof server is intended to be local (Docker on the user's own machine or the wallet's own sandboxed environment), not a third-party server.
 - **Crossing to the Midnight network (public):** only the ZK proof itself, the disclosed boolean (`true`/`false`), and the derived nullifier hash. No birthdate, no signature, no user secret.
 - **Visible to the AI platform (via Indexer/middleware):** only "this context_id has a valid, unused proof" — a boolean-shaped fact, nothing else.
 
 ## 5. Deployment topology
 
-**Local development (build this first):**
+**Current local development:**
 ```
-docker: proof-server + indexer + midnight-node   (yarn env:up)
+Docker: Midnight proof server only   (npm run env:up)
    ↕
-localhost:6300 (proof server)  |  local indexer GraphQL endpoint  |  local node RPC
+localhost:6300 (proof server)
    ↕
-Frontend (localhost:5173, Vite dev server) + Middleware (localhost:4000)
+Frontend (localhost:3000, Next.js dev server) + Middleware (localhost:4000)
 ```
+
+The current browser flow uses a demo verifier and does not yet submit a real
+Midnight proof. A local Midnight node and Indexer are future infrastructure,
+not currently included in Docker Compose.
 
 **Demo deployment (testnet, as a fallback layer, not a dependency):**
 ```

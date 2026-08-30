@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/issuer/mock-credential.test.ts",
+    "test": "tsx --test src/issuer/mock-credential.test.ts src/access-store.test.ts",
     "issuer:generate-keypair": "tsx src/issuer/cli.ts generate-keypair",
     "issuer:issue": "tsx src/issuer/cli.ts issue"
   },

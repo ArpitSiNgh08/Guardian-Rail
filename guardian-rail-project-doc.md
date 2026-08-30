@@ -2,6 +2,10 @@
 ### ZK age & consent gate for AI chat/companion apps — built on Midnight
 **MLH Midnight Hackathon, Aug 28–30 2026**
 
+> Status note: this document began as the hackathon build plan. The current
+> implementation status and remaining work are tracked in [progress.md](progress.md)
+> and [remaining-work.md](remaining-work.md).
+
 ---
 
 ## 1. The idea
@@ -19,7 +23,7 @@ AI companion and chatbot platforms (Character.AI, general-purpose LLM chat apps)
 1. A user holds a **credential** — for the hackathon demo, this is a self-attested date of birth signed by a mock "issuer" (standing in for a real KYC provider / government eID in a production version).
 2. The user's wallet runs a **local witness function** that reads this credential off-device.
 3. A **Compact circuit** takes the credential as private input, checks:
-   - the issuer's signature is valid (the credential is authentic), and
+   - the credential commitment was registered by the issuer, and
    - `today − birthdate ≥ threshold_age`
 4. The circuit outputs **only a boolean** (`disclose(true)`), wrapped with a **nullifier** tied to *(user secret, platform/context ID)* so the same proof can't be silently reused to create unlimited fake accounts on the same platform, but a fresh nullifier is generated per platform so no two platforms can correlate the same user across services.
 5. The AI platform's backend checks the Midnight ledger (via the Indexer) for a valid, unused proof for that session — and unlocks access. Nothing else about the user ever leaves their device.
@@ -31,12 +35,12 @@ AI companion and chatbot platforms (Character.AI, general-purpose LLM chat apps)
 We are **not** building a real KYC/issuer network this weekend — that's out of scope and not the point of the demo. We're proving the on-chain mechanic works end-to-end and wrapping it around a real (small) chatbot so judges see the "before vs. after."
 
 **In scope:**
-- [ ] One Compact contract with: ledger state, one primary circuit (`proveAge`), witness function, `disclose()`-gated output, nullifier set, sealed policy field
-- [ ] A minimal mock "issuer" — a script that signs a `(birthdate)` credential with a test keypair, standing in for a real KYC provider
-- [ ] A small web frontend: connect wallet → enter DOB locally (never transmitted) → generate proof → submit transaction
-- [ ] A tiny demo chatbot (wrap an existing open-source small LLM chat UI, or a scripted mock chat) that is locked until the middleware sees a valid proof for that session
-- [ ] A middleware/backend service that queries the Indexer for proof status and flips the chatbot's access flag
-- [ ] A **replay-attack demo**: show that trying to reuse the same proof on the same platform a second time fails (nullifier already spent), proving the anti-Sybil property live
+- [x] Initial Compact contract with ledger state, `proveAge`, issuer-authorized registration, policy field, and nullifier set; compiled with Compact toolchain 0.31.1
+- [x] Mock issuer that signs a `(birthdate)` credential with a test keypair
+- [x] Next.js demo frontend that evaluates DOB locally and submits only a demo result/nullifier
+- [x] Scripted demo chatbot locked until middleware accepts a proof
+- [x] Middleware with an in-memory demo verifier and replay protection
+- [ ] Real Lace proof generation, contract submission, and Indexer-backed verification
 
 **Explicitly out of scope for the hackathon (mention as roadmap in the pitch):**
 - Real integration with an actual government ID / eID issuer
@@ -56,7 +60,7 @@ We are **not** building a real KYC/issuer network this weekend — that's out of
 
 **Phase 1 — Contract (hours 3–14)**
 - Write the ledger declarations, the mock-issuer signature check, the age-threshold assertion, the nullifier logic, `disclose()` wrapping
-- Compile with `compactc`, fix type errors, get unit-level circuit calls working against the local proof server
+- Compile with `compact`, fix type errors, and get unit-level circuit calls working against the local proof server
 - Write the mock issuer signing script (Node/TS, outside the contract)
 
 **Phase 2 — Frontend + wallet integration (hours 8–24, parallel with Phase 1)**
@@ -84,10 +88,10 @@ We are **not** building a real KYC/issuer network this weekend — that's out of
 
 **Local dev environment**
 - Node.js 20.x (use nvm)
-- Docker Desktop — runs the local proof server, indexer, and midnight-node together (`yarn env:up` / `yarn env:down` pattern)
-- Yarn (Midnight tooling defaults to yarn scripts)
+- Docker Desktop — currently runs the local Midnight proof server (`npm run env:up` / `npm run env:down`)
+- npm 10 or later
 - VS Code + **Compact Language Support** extension (syntax highlighting, snippets)
-- **Compact compiler** (`compactc`) — target version **0.28.0** (confirm current version in the `#dev-chat` Discord channel before you start; Midnight ships fast)
+- **Compact compiler** (`compact`) — project toolchain version **0.31.1** / language version **0.23.0**
 - **create-mn-app** — scaffolds a new Midnight project from npm or GitHub in seconds; start here instead of from a blank repo
 
 **Wallet**
